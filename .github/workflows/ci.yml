@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Cancel an older run when a newer commit lands on the same branch.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Analyze + unit & widget tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.5
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test integration_test
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Unit & widget tests
+        run: flutter test --coverage
+
+      - name: Coverage summary
+        run: |
+          total=$(grep -c '^SF:' coverage/lcov.info)
+          hit=$(awk -F: '/^LH:/ {h+=$2} /^LF:/ {f+=$2} END {printf "%.1f", (f ? h*100/f : 0)}' coverage/lcov.info)
+          echo "### Coverage: ${hit}% of lines across ${total} files" >> "$GITHUB_STEP_SUMMARY"
+
+  integration:
+    name: Integration tests (Linux desktop)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.5
+          cache: true
+
+      - name: Install Linux desktop build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev xvfb
+
+      - run: flutter pub get
+
+      # xvfb provides a virtual display for the desktop app window.
+      - name: Integration tests
+        run: xvfb-run -a flutter test integration_test -d linux

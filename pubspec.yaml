@@ -1,0 +1,32 @@
+name: flutter_testing_lab
+description: "A task manager built to demonstrate unit, widget and integration testing in Flutter."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: RobotoMono
+      fonts:
+        - asset: assets/fonts/RobotoMono-Regular.ttf
+        - asset: assets/fonts/RobotoMono-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/RobotoMono-Bold.ttf
+          weight: 700
